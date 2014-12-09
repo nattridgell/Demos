@@ -1,0 +1,71 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/google-apis/google-apis.html">
+<link rel="import" href="bower_components/google-map/google-map.html">
+
+<polymer-element name="google-map-highlighter" attributes="latitude longitude map">
+<template>
+
+  <style>
+    :host {
+      position: relative;
+      display: block;
+      height: 100%;
+    }
+
+    #map-canvas {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+
+  </style>
+ <!-- TODO: figure out how to access and insert the content in the marker. <content id="information" select="*"></content> -->
+
+  <div id="map-canvas"><google-map latitude="{{latitude}}" longitude="{{longitude}}" zoom="10">
+     <google-map-marker latitude="{{latitude}}" longitude="{{longitude}}">Content goes here.</google-map-marker> </google-map> </div>
+
+</template>
+<script>
+Polymer({
+    /**
+     * A latitude to center the map on.
+     *
+     * @attribute latitude
+     * @type number
+     * @default 37.77493
+     */
+    latitude: 37.77493,
+
+    /**
+     * A longitude to center the map on.
+     *
+     * @attribute longitude
+     * @type number
+     * @default -122.41942
+     */
+    longitude: -122.41942,
+
+    map: null,
+    marker:null,
+
+    setup:  function() {
+/*      this.map = document.querySelector('google-map');
+      map.latitude=this.latitude;
+      map.longitude=this.longitude;
+      map.zoomable=this.zoomable; 
+      map.zoom=this.zoom;
+      map.minZoom=this.minZoom; 
+      map.maxZoom=this.maxZoom; 
+      map.mapType=this.mapType;
+
+      this.marker = document.querySelector('google-map-marker');
+      marker.latitude=this.latitude;
+      marker.longitude=this.longitude;
+      marker.info.setContent(information); */
+    }
+});
+
+</script>
+</polymer-element>
