@@ -3,9 +3,27 @@
 <title>Testing page</title>
 <script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
 <link rel="import" href="bower_components/google-map/google-map.html">
+    
+    <google-map fitToMarkers zoom="15"></google-map>
+
 </head>
 <body>
-	<google-map latitude="37.779" longitude="-122.3892" fit>
+
+    <script>
+      var map = document.querySelector('google-map');
+      map.latitude = 37.77493;
+      map.longitude = -122.41942;
+      map.addEventListener('google-map-ready', function(e) {
+        alert('Map loaded!');
+      });
+    </script>
+<!--	 <div id="map-canvas"> 
+	<google-map latitude="37.779" longitude="-122.3892" fitToMarkers>
+	<google-map-marker latitude="37.79" longitude="-122.3092"></google-map-marker>
+	<google-map-marker latitude="38.79" longitude="-121.3092"></google-map-marker>
+	<google-map-marker latitude="35.79" longitude="-123.3092"></google-map-marker>
 	</google-map>
+	</div> 
+	<div id = "text-canvas"> <p>This is my paragraph.</p> </div> -->
 </body>
 </html>

@@ -2,7 +2,68 @@
 <link rel="import" href="bower_components/google-apis/google-apis.html">
 <link rel="import" href="bower_components/google-map/google-map.html">
 
-<polymer-element name="google-map-highlighter" attributes="latitude longitude map">
+<!--
+<polymer-element name="google-map-highlighter-marker" extends="google-map-marker" attributes="placeId icon">
+<template>
+<shadow></shadow>
+</template>
+<script>
+( function() {
+    Polymer({
+      placeId: null,
+      title: null,
+
+      updateLocation: function() {
+          window.console.log("I am in location AA.");
+        if (this.placeId) {
+          var service = new google.maps.places.PlacesService(this.map);
+          window.console.log("I am in location A.");
+          service.getDetails({placeId: this.placeId}, function(place, status) {
+          window.console.log("I am in location B, get details check done.");
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+          window.console.log("I am in location C. Lat: "+ place.geometry.location.lat()+" Lng: "+place.geometry.location.lng()+ " Name: "+place.name);
+              this.latitude = place.geometry.location.lat();
+              this.longitude = place.geometry.location.lng();
+              this.title = place.name; // TODO: Check the syntax for title and icon declaration
+            }
+          });
+        }
+      },
+
+      mapReady: function() {
+        this.updateLocation();
+        this.super();
+      },
+
+    });
+})();
+
+</script>
+</polymer-element>
+
+<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries">
+<template>
+  <shadow></shadow>
+  <content id="markers" select="google-map-highlighter-marker"></content>
+</template>
+<script>
+    Polymer({
+         mapApiLoaded: function() {
+           window.console.log("I am in mapApiLoaded.");
+           this.super(); 
+         }
+
+    });
+
+</script>
+</polymer-element> -->
+
+
+
+
+
+
+<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId address phone">
 <template>
 
   <style>
@@ -21,16 +82,18 @@
     }
 
   </style>
- <!-- TODO: figure out how to access and insert the content in the marker. <content id="information" select="*"></content> -->
+ <!-- TODO: put content inside -->
+<div id="map-canvas">
+  <google-maps-api apiKey="{{apiKey}}" version='3.exp' on-api-load="{{updateLocation}}" libraries="places"></google-maps-api>
 
-  <div id="map-canvas"><google-map latitude="{{latitude}}" longitude="{{longitude}}" zoom="10">
-     <google-map-marker latitude="{{latitude}}" longitude="{{longitude}}">Content goes here.</google-map-marker> </google-map> </div>
-
+  <google-map-highlighter-map zoom="14" on-google-map-ready="{{mapReady}}" fitToMarkers>
+     <google-map-highlighter-marker placeId="{{placeId}}" title="{{name}}">Content goes here.</google-map-highlighter-marker> </google-map-highlighter-map>
+</div>
 </template>
 <script>
 Polymer({
     /**
-     * A latitude to center the map on.
+     * A latitude to put the marker on and centre, calculated if an address is given.
      *
      * @attribute latitude
      * @type number
@@ -39,7 +102,7 @@ Polymer({
     latitude: 37.77493,
 
     /**
-     * A longitude to center the map on.
+     * A longitude to put the marker on and centre, calculated if an address is given.
      *
      * @attribute longitude
      * @type number
@@ -47,25 +110,61 @@ Polymer({
      */
     longitude: -122.41942,
 
+    /**
+     * Name of the place being highlighted.
+     *
+     * @attribute phoneNumber
+     * @type string
+     * @default The Sydney Opera House
+     */
+    contact: "0118 999 881 999 119 725 3",
+
+    /**
+     * Name of the place being highlighted.
+     *
+     * @attribute name
+     * @type string
+     * @default The Sydney Opera House
+     */
+    name: "The Sydney Opera House",
+
+    /**
+     * If set, removes the map's default UI controls.
+     *
+     * @attribute disableDefaultUI
+     * @type boolean
+     * @default false
+     */
+    disableDefaultUI: false,
+
+    apiKey: null,
+
     map: null,
     marker:null,
 
-    setup:  function() {
-/*      this.map = document.querySelector('google-map');
-      map.latitude=this.latitude;
-      map.longitude=this.longitude;
-      map.zoomable=this.zoomable; 
-      map.zoom=this.zoom;
-      map.minZoom=this.minZoom; 
-      map.maxZoom=this.maxZoom; 
-      map.mapType=this.mapType;
+    mapReady:  function() {
+      this.updateLocation();
+    },
 
-      this.marker = document.querySelector('google-map-marker');
-      marker.latitude=this.latitude;
-      marker.longitude=this.longitude;
-      marker.info.setContent(information); */
-    }
-});
+      updateLocation: function() {
+        window.console.log("I am in updateLocation.");
+        if (this.placeId) {
+          var service = new google.maps.places.PlacesService(this.map);
+          service.getDetails({placeId: this.placeId}, function(place, status) {
+          window.console.log("Check service status.");
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+
+              this.latitude = place.geometry.location.lat();
+              this.longitude = place.geometry.location.lng();
+              this.title = place.name; // TODO: Check the syntax for title and icon declaration
+              window.console.log("Lat: "+ this.latitude+" Lng: "+this.longitude+ " Name: "+this.title);
+            }
+          });
+        }
+      },
+    
+    
+  });
 
 </script>
 </polymer-element>
