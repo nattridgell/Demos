@@ -12,24 +12,6 @@
     Polymer({
       placeId: null,
       title: null,
-
-      updateLocation: function() {
-          window.console.log("I am in location AA.");
-        if (this.placeId) {
-          var service = new google.maps.places.PlacesService(this.map);
-          window.console.log("I am in location A.");
-          service.getDetails({placeId: this.placeId}, function(place, status) {
-          window.console.log("I am in location B, get details check done.");
-            if (status == google.maps.places.PlacesServiceStatus.OK) {
-          window.console.log("I am in location C. Lat: "+ place.geometry.location.lat()+" Lng: "+place.geometry.location.lng()+ " Name: "+place.name);
-              this.latitude = place.geometry.location.lat();
-              this.longitude = place.geometry.location.lng();
-              this.title = place.name; // TODO: Check the syntax for title and icon declaration
-            }
-          });
-        }
-      },
-
       mapReady: function() {
         this.updateLocation();
         this.super();
@@ -73,7 +55,7 @@
       height: 100%;
     }
 
-    #map-canvas {
+    google-map {
       position: absolute;
       top: 0;
       right: 0;
@@ -83,12 +65,12 @@
 
   </style>
  <!-- TODO: put content inside -->
-<div id="map-canvas">
-  <google-maps-api apiKey="{{apiKey}}" version='3.exp' on-api-load="{{updateLocation}}" libraries="places"></google-maps-api>
 
-  <google-map-highlighter-map zoom="14" on-google-map-ready="{{mapReady}}" fitToMarkers>
-     <google-map-highlighter-marker placeId="{{placeId}}" title="{{name}}">Content goes here.</google-map-highlighter-marker> </google-map-highlighter-map>
-</div>
+ <!-- <google-maps-api apiKey="{{apiKey}}" version='3.exp' on-api-load="{{updateLocation}}" libraries="places"></google-maps-api> -->
+
+  <google-map map="{{map}}" zoom="14" on-google-map-ready="{{mapReady}}" fitToMarkers>
+     <google-map-marker latitude="{{latitude}}" longitude="{{longitude}}" title="{{name}}">Content goes here.</google-map-marker> </google-map>
+
 </template>
 <script>
 Polymer({
@@ -149,11 +131,11 @@ Polymer({
       updateLocation: function() {
         window.console.log("I am in updateLocation.");
         if (this.placeId) {
+          window.console.log("I am inside if this.placeId.");
           var service = new google.maps.places.PlacesService(this.map);
           service.getDetails({placeId: this.placeId}, function(place, status) {
           window.console.log("Check service status.");
             if (status == google.maps.places.PlacesServiceStatus.OK) {
-
               this.latitude = place.geometry.location.lat();
               this.longitude = place.geometry.location.lng();
               this.title = place.name; // TODO: Check the syntax for title and icon declaration
