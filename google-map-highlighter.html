@@ -62,7 +62,7 @@
 
 
 
-<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId address phone">
+<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId latitude longitude phone">
 <template>
 
   <style>
@@ -82,13 +82,13 @@
     }
 
   </style>
- <!-- TODO: put content inside -->
 
  <!-- <google-maps-api apiKey="{{apiKey}}" version='3.exp' on-api-load="{{updateLocation}}" libraries="places"></google-maps-api> -->
 <div id="map">
   <google-map-highlighter-map map="{{map}}" zoom="14" placeId="{{placeId}}"  on-google-map-ready="{{mapReady}}"  >
      <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" title="{{name}}"></google-map-marker> </google-map-highlighter-map>
 </div>
+
 </template>
 <script>
 Polymer({
@@ -138,7 +138,7 @@ Polymer({
     disableDefaultUI: false,
 
     apiKey: null,
-
+    content: null,
     map: null,
     marker:null,
 
