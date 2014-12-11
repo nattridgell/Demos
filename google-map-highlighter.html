@@ -45,7 +45,7 @@
 
 
 
-<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId address phone">
+<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId latitude longitude phone">
 <template>
 
   <style>
@@ -68,8 +68,8 @@
 
  <!-- <google-maps-api apiKey="{{apiKey}}" version='3.exp' on-api-load="{{updateLocation}}" libraries="places"></google-maps-api> -->
 
-  <google-map map="{{map}}" zoom="14" on-google-map-ready="{{mapReady}}" fitToMarkers>
-     <google-map-marker latitude="{{latitude}}" longitude="{{longitude}}" title="{{name}}">Content goes here.</google-map-marker> </google-map>
+  <google-map map="{{map}}" zoom="14" on-google-map-ready="{{mapReady}}" fitToMarkers latitude="[[latitude]]" longitude="[[longitude]]">
+     <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" title="{{name}}"></google-map-marker></google-map>
 
 </template>
 <script>
@@ -120,12 +120,14 @@ Polymer({
     disableDefaultUI: false,
 
     apiKey: null,
-
+    content: null,
     map: null,
     marker:null,
 
     mapReady:  function() {
       this.updateLocation();
+	var marker = document.getElementsByName("google-map-marker");
+      this.contentChanged();
     },
 
       updateLocation: function() {
@@ -144,7 +146,11 @@ Polymer({
           });
         }
       },
-    
+
+    contentChanged: function(){
+	var marker = this.$.marker;
+	marker.innerHTML = this.innerHTML;
+}
     
   });
 
