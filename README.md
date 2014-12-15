@@ -1,7 +1,7 @@
-Google-map-highlighter
+google-map-highlighter
 =====
 ##Summary##
-The `google-map-highlighter` creates a  [google-map](https://github.com/GoogleWebComponents/google-map) with a marker in the centre at the place to be highlighted.
+The `google-map-highlighter` Polymer component creates a  [google-map](https://github.com/GoogleWebComponents/google-map) with a marker in the centre at the place to be highlighted.
 It auto-generates a layout for the marker's infowindow based on the information given by the placeId which can be used or personal formatting can be used instead (or a combination).
 
 
@@ -13,7 +13,7 @@ Using placeId and the auto generated info window.
 </google-map-highlighter>
 ```
 
-Using an address and overwritting the title.
+Using an address and overwriting the title.
 ```
 <google-map-highlighter address="48 Pirrama Road, Pyrmont, NSW" title="Google, Sydney">
 </google-map-highlighter>
@@ -36,7 +36,7 @@ Using an address and overwritting the title.
   *default: the name given in the placeId*
   
 **apiKey**
-  A maps API key.
+  Your Google Maps API Key.
   *default: null*
   
 **enableDirections**
