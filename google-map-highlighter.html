@@ -23,7 +23,7 @@
 </script>
 </polymer-element>
 -->
-<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries placeId ">
+<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries signedIn language placeId ">
 <template>
   <shadow></shadow>
  <!-- Only include the following line if standard google-map-marker 's are no longer being used
@@ -34,22 +34,25 @@
       placeId: null,
 
       updateLocation: function() {
+window.console.log("I am inside update location");
           var service = new google.maps.places.PlacesService(this.map);
           service.getDetails({placeId: this.placeId}, function(place, status) {
+window.console.log("I am inside update location - get Details");
             if (status == google.maps.places.PlacesServiceStatus.OK) {
               this.latitude = place.geometry.location.lat();
               this.longitude = place.geometry.location.lng();
               this.name = place.name; // TODO: Check the syntax for icon declaration
-              this.asyncFire('google-map-ready', {latitude: this.latitude, longitude: this.longitude, name: place.name});
+window.console.log("I am inside update location - get Details with lat: " + this.latitude);
+              this.asyncFire('google-map-ready', place);
             }
           }.bind(this));
       },
 
       mapApiLoaded: function() {
+window.console.log("I am inside mapApiLoaded");
         this.map = new google.maps.Map(this.$.map, this.getMapOptions());
         this.updateLocation();
         this.updateCenter();
-        this.updateMarkersInitial();
         this.addMapListeners();
       },
     });
@@ -62,7 +65,7 @@
 
 
 
-<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId latitude longitude phone">
+<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId latitude longitude details">
 <template>
 
   <style>
@@ -85,8 +88,8 @@
 
  <!-- <google-maps-api apiKey="{{apiKey}}" version='3.exp' on-api-load="{{updateLocation}}" libraries="places"></google-maps-api> -->
 <div id="map">
-  <google-map-highlighter-map map="{{map}}" zoom="14" placeId="{{placeId}}"  on-google-map-ready="{{mapReady}}"  >
-     <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" title="{{name}}"></google-map-marker> </google-map-highlighter-map>
+  <google-map-highlighter-map map="{{map}}" zoom="14" placeId="{{placeId}}"  on-google-map-ready="{{mapReady}}">
+     <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" name="{{name}}"></google-map-marker> </google-map-highlighter-map>
 </div>
 
 </template>
@@ -124,7 +127,7 @@ Polymer({
      *
      * @attribute name
      * @type string
-     * @default The Sydney Opera House
+     * @default null
      */
     name: null,
 
@@ -137,15 +140,27 @@ Polymer({
      */
     disableDefaultUI: false,
 
+    /**
+     * If set, allows content for the infowindow to be generated from place_id.
+     *
+     * @attribute details
+     * @type boolean
+     * @default true
+     */
+    details: true,
+
     apiKey: null,
     content: null,
     map: null,
     marker:null,
 
     mapReady:  function(place) {
-      this.latitude = place.detail.latitude;
-      this.longitude = place.detail.longitude;
+      this.latitude = place.detail.geometry.location.lat();
+      this.longitude = place.detail.geometry.location.lng();
       this.name = place.detail.name;
+      this.address = place.detail.formatted_address;
+      this.website = place.detail.website;
+      this.phone = place.detail.formatted_phone_number;
       this.$.map.style.visibility = 'visible';
       this.contentChanged();
     },
@@ -153,7 +168,13 @@ Polymer({
 
     contentChanged: function(){
       var marker = this.$.marker;
-      marker.innerHTML = this.innerHTML;
+	window.console.log(this.details);
+      if (this.details) {
+	marker.innerHTML =   '<h1>'+this.name+'</h1><p>Address: '+this.address+'<br>Website: <a href="'+this.website+'">google.com.au</a><br>Phone: '+this.phone+'</p>';
+      }
+      else{
+	marker.innerHTML = this.innerHTML;
+      }
     }
     
   });
