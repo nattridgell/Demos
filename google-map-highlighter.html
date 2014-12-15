@@ -172,9 +172,7 @@ Polymer({
       if (this.details) {
 	marker.innerHTML =   '<h1>'+this.name+'</h1><p>Address: '+this.address+'<br>Website: <a href="'+this.website+'">google.com.au</a><br>Phone: '+this.phone+'</p>';
       }
-      else{
-	marker.innerHTML = this.innerHTML;
-      }
+	marker.innerHTML = marker.innerHTML+this.innerHTML;
     }
     
   });
