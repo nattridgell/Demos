@@ -65,7 +65,7 @@ window.console.log("I am inside mapApiLoaded");
 
 
 
-<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId latitude longitude details">
+<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId details">
 <template>
 
   <style>
@@ -95,24 +95,6 @@ window.console.log("I am inside mapApiLoaded");
 </template>
 <script>
 Polymer({
-    /**
-     * A latitude to put the marker on and centre, calculated if an address is given.
-     *
-     * @attribute latitude
-     * @type number
-     * @default 37.77493
-     */
-    latitude: 0,
-
-    /**
-     * A longitude to put the marker on and centre, calculated if an address is given.
-     *
-     * @attribute longitude
-     * @type number
-     * @default -122.41942
-     */
-    longitude: 0,
-
     /**
      * The phone number/contact details of the place being highlighted (optional).
      *
@@ -170,7 +152,7 @@ Polymer({
       var marker = this.$.marker;
 	window.console.log(this.details);
       if (this.details) {
-	marker.innerHTML =   '<h1>'+this.name+'</h1><p>Address: '+this.address+'<br>Website: <a href="'+this.website+'">google.com.au</a><br>Phone: '+this.phone+'</p>';
+	marker.innerHTML = '<h1>'+this.name+'</h1><p>Address: '+this.address+'<br>Website: <a href="'+this.website+'">google.com.au</a><br>Phone: '+this.phone+'</p>';
       }
 	marker.innerHTML = marker.innerHTML+this.innerHTML;
     }
