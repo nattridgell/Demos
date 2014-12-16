@@ -4,7 +4,11 @@
 <link rel="import" href="bower_components/google-map/google-map-directions.html">
 
 
-<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="address apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries placeId ">
+</script>
+</polymer-element>
+-->
+<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="address apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries signedIn placeId ">
+
 <template>
   <shadow></shadow>
 </template>
@@ -55,7 +59,8 @@
 
 
 
-<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId address">
+
+<polymer-element name="google-map-highlighter" attributes="address apiKey map name placeId details zoom">
 <template>
 
   <style>
@@ -73,7 +78,7 @@
       left: 0;
       visibility:hidden;
     }
-
+<!-- TODO: @Natalie make the formatting of the pac fit the map better -->
       .controls {
         margin-top: 16px;
         border: 1px solid transparent;
@@ -109,6 +114,7 @@
 
 
 <google-maps-api apiKey="{{apiKey}}" version="3.exp" libraries="places"></google-maps-api>
+
 <template bind if="{{enableDirections}}">
       <google-map-directions map="{{map}}"
           startAddress="{{origin}}"
@@ -120,8 +126,8 @@
    <input id="pac" class="controls" type="text"
         placeholder="Enter a start address">
 </template>
-  <google-map-highlighter-map map="{{map}}" zoom="14" placeId="{{placeId}}"  on-google-map-ready="{{mapReady}}"  address="{{address}}">
-     <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" title="{{name}}">
+  <google-map-highlighter-map map="{{map}}" zoom="{{zoom}}" placeId="{{placeId}}"  address="{{address}}"  on-google-map-ready="{{mapReady}}"  >
+     <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" name="{{name}}">
 </google-map-marker> </google-map-highlighter-map>
 </div>
 
@@ -129,45 +135,33 @@
 
 </template>
 <script>
-Polymer({
-    /**
-     * A latitude to put the marker on and centre, calculated if an address is given.
-     *
-     * @attribute latitude
-     * @type number
-     * @default 37.77493
-     */
-    latitude: 0,
-
-    /**
-     * A longitude to put the marker on and centre, calculated if an address is given.
-     *
-     * @attribute longitude
-     * @type number
-     * @default -122.41942
-     */
-    longitude: 0,
-
-    /**
-     * The phone number/contact details of the place being highlighted (optional).
-     *
-     * @attribute phoneNumber
-     * @type string
-     * @default null
-     */
-     observe: {enableDirections: 'updateResultsMarker'},
-
-     autocomplete:null,
-     enableDirections: false,
+  Polymer({
 
     /**
      * Name of the place being highlighted.
      *
      * @attribute name
      * @type string
-     * @default The Sydney Opera House
+     * @default null
      */
     name: null,
+
+    /**
+     * The placeId of the place being highlighted. Either this or the address is required.
+     *
+     * @attribute placeId
+     * @type string
+     * @default null
+     */
+    placeId:null,
+
+    /**
+     * The address of the place being highlighted.
+     *
+     * @attribute address
+     * @type string
+     * @default null
+     */
     address: null,
 
     /**
@@ -179,15 +173,87 @@ Polymer({
      */
     disableDefaultUI: false,
 
+    /**
+     * If set, allows content for the infowindow to be generated from placeId.
+     *
+     * @attribute details
+     * @type boolean
+     * @default true
+     */
+    details: true,
+
+    /**
+     * The maps api key.
+     *
+     * @attribute name
+     * @type string
+     * @default null
+     */
     apiKey: null,
 
+    /**
+     * The google map being shown.
+     *
+     * @attribute map
+     * @type google.maps.Map
+     * @default null
+     */
     map: null,
+
+    /**
+     * The marker at the place being highlighted.
+     *
+     * @attribute marker
+     * @type google.maps.Marker
+     * @default null
+     */
     marker:null,
+
+    /**
+     * The zoom of the map.
+     *
+     * @attribute zoom
+     * @type number
+     * @default null
+     */
+    zoom: 14,
+
+    /**
+     * If there should be a search box displayed for users to get directions to the place highlighted.
+     * TODO: @Natalie properly remove/include the searchbox when enableDirections changes value.
+     *
+     * @attribute enableDirections
+     * @type boolean
+     * @default false
+     */
+    enableDirections: false,
+
+    /**
+     * If directions are enabled, this is the LatLng of the start address.
+     *
+     * @attribute origin
+     * @type boolean
+     * @default false
+     */
+    origin: null,
+
+    /**
+     * TODO: @Natalie properly remove/include the searchbox when enableDirections changes value.
+     *
+     */
+    observe: {
+      enableDirections: 'updateResultsMarker'
+    },
+
 
     mapReady:  function(place) {
       this.latitude = place.detail.geometry.location.lat();
       this.longitude = place.detail.geometry.location.lng();
       this.name = place.detail.name;
+      this.address = place.detail.formatted_address;
+      this.website = place.detail.website;
+      this.phone = place.detail.formatted_phone_number;
+      this.rating = place.detail.rating;
       this.$.map.style.visibility = 'visible';
       this.contentChanged();
       this.updateResults();
@@ -195,36 +261,38 @@ Polymer({
 
     contentChanged: function(){
       var marker = this.$.marker;
-      marker.innerHTML = this.innerHTML;
+      if (this.details && this.placeId!=undefined) {
+	marker.innerHTML = '<h1>'+this.name+'</h1><p>Address: '+this.address+'<br>Website: <a href="'+this.website+'">google.com.au</a><br>Phone: '+this.phone+'<br>Rating: '+this.rating+'</p>';
+      }
+      marker.innerHTML = marker.innerHTML+this.innerHTML;
+      marker.info.open(this.map, marker.marker);
     },
 
-
-
-
-  updateResults: function () {
-    if (!this.enableDirections) {
-      if (this.autocomplete) {
-        this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
-        this.autocomplete.unbind();
-        this.autocomplete = null;
+    updateResults: function () {
+      if (!this.enableDirections) {
+        if (this.autocomplete) {
+          this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop(); //TODO: @Natalie properly remove searchbox from the map.
+          this.autocomplete.unbind();
+          this.autocomplete = null;
+        }
+        this.origin = null;
+        return;
       }
-      return;
-    }
-    if (!this.autocomplete) {
-      var input = this.$.pac;
-      this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-      this.autocomplete = new google.maps.places.Autocomplete(input);
-      this.autocomplete.bindTo('bounds', this.map);
-      google.maps.event.addListener(this.autocomplete, 'place_changed', this.updateResults.bind(this));
-    }
+      if (!this.autocomplete) {
+        var input = this.$.pac;
+        this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        this.autocomplete = new google.maps.places.Autocomplete(input);
+        this.autocomplete.bindTo('bounds', this.map);
+        google.maps.event.addListener(this.autocomplete, 'place_changed', this.updateResults.bind(this));
+      }
 
-    var place = this.autocomplete.getPlace();
-    if (!place || !place.geometry) {
-      return;
-    }
+      var place = this.autocomplete.getPlace();
+      if (!place || !place.geometry) {
+        return;
+      }
 
-    this.origin = place.geometry.location;
-  }
+      this.origin = place.geometry.location;
+    }
     
   });
 
