@@ -1,55 +1,48 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/google-apis/google-apis.html">
 <link rel="import" href="bower_components/google-map/google-map.html">
+<link rel="import" href="bower_components/google-map/google-map-directions.html">
 
-<!--
-<polymer-element name="google-map-highlighter-marker" extends="google-map-marker" attributes="placeId icon">
-<template>
-<shadow></shadow>
-</template>
-<script>
-( function() {
-    Polymer({
-      placeId: null,
-      title: null,
-      mapReady: function() {
-        this.updateLocation();
-        this.super();
-      },
 
-    });
-})();
-
-</script>
-</polymer-element>
--->
-<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries placeId ">
+<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="address apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries placeId ">
 <template>
   <shadow></shadow>
- <!-- Only include the following line if standard google-map-marker 's are no longer being used
-  <content id="markers" select="google-map-highlighter-marker"></content> -->
 </template>
 <script>
     Polymer({
       placeId: null,
+      address:null,
 
       updateLocation: function() {
+        if (this.placeId) {
           var service = new google.maps.places.PlacesService(this.map);
           service.getDetails({placeId: this.placeId}, function(place, status) {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
               this.latitude = place.geometry.location.lat();
               this.longitude = place.geometry.location.lng();
-              this.name = place.name; // TODO: Check the syntax for icon declaration
-              this.asyncFire('google-map-ready', {latitude: this.latitude, longitude: this.longitude, name: place.name});
+              if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+              }
+              this.asyncFire('google-map-ready', place);
             }
           }.bind(this));
+        } else if (this.address) {
+          var geocoder = new google.maps.Geocoder();
+          geocoder.geocode( {address: this.address}, function(place, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+              this.latitude = place[0].geometry.location.lat();
+              this.longitude = place[0].geometry.location.lng();
+              this.asyncFire('google-map-ready', place[0]);
+            }
+          }.bind(this));
+        }
       },
 
       mapApiLoaded: function() {
         this.map = new google.maps.Map(this.$.map, this.getMapOptions());
         this.updateLocation();
         this.updateCenter();
-        this.updateMarkersInitial();
+        this.updateMarkers();
         this.addMapListeners();
       },
     });
@@ -62,7 +55,7 @@
 
 
 
-<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId latitude longitude phone">
+<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId address">
 <template>
 
   <style>
@@ -81,13 +74,58 @@
       visibility:hidden;
     }
 
+      .controls {
+        margin-top: 16px;
+        border: 1px solid transparent;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        height: 1.5em;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      #pac {
+        background-color: #fff;
+        padding: 0 11px 0 13px;
+        font-family: Roboto;
+        font-size: 1em;
+        font-weight: 300;
+        text-overflow: ellipsis;
+      }
+
+      #pac:focus {
+        border-color: #4d90fe;
+        margin-left: -1px;
+        padding-left: 14px;  /* Regular padding-left + 1. */
+        width: 401px;
+      }
+
+      .pac-container {
+        font-family: Roboto;
+      }
+
   </style>
 
- <!-- <google-maps-api apiKey="{{apiKey}}" version='3.exp' on-api-load="{{updateLocation}}" libraries="places"></google-maps-api> -->
+
+<google-maps-api apiKey="{{apiKey}}" version="3.exp" libraries="places"></google-maps-api>
+<template bind if="{{enableDirections}}">
+      <google-map-directions map="{{map}}"
+          startAddress="{{origin}}"
+          endAddress="{{address}}"
+          travelMode="DRIVING"></google-map-directions>
+</template>
 <div id="map">
-  <google-map-highlighter-map map="{{map}}" zoom="14" placeId="{{placeId}}"  on-google-map-ready="{{mapReady}}"  >
-     <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" title="{{name}}"></google-map-marker> </google-map-highlighter-map>
+<template bind if="{{enableDirections}}">
+   <input id="pac" class="controls" type="text"
+        placeholder="Enter a start address">
+</template>
+  <google-map-highlighter-map map="{{map}}" zoom="14" placeId="{{placeId}}"  on-google-map-ready="{{mapReady}}"  address="{{address}}">
+     <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" title="{{name}}">
+</google-map-marker> </google-map-highlighter-map>
 </div>
+
+
 
 </template>
 <script>
@@ -117,7 +155,10 @@ Polymer({
      * @type string
      * @default null
      */
-    contact: null,
+     observe: {enableDirections: 'updateResultsMarker'},
+
+     autocomplete:null,
+     enableDirections: false,
 
     /**
      * Name of the place being highlighted.
@@ -127,6 +168,7 @@ Polymer({
      * @default The Sydney Opera House
      */
     name: null,
+    address: null,
 
     /**
      * If set, removes the map's default UI controls.
@@ -138,23 +180,51 @@ Polymer({
     disableDefaultUI: false,
 
     apiKey: null,
-    content: null,
+
     map: null,
     marker:null,
 
     mapReady:  function(place) {
-      this.latitude = place.detail.latitude;
-      this.longitude = place.detail.longitude;
+      this.latitude = place.detail.geometry.location.lat();
+      this.longitude = place.detail.geometry.location.lng();
       this.name = place.detail.name;
       this.$.map.style.visibility = 'visible';
       this.contentChanged();
+      this.updateResults();
     },
-
 
     contentChanged: function(){
       var marker = this.$.marker;
       marker.innerHTML = this.innerHTML;
+    },
+
+
+
+
+  updateResults: function () {
+    if (!this.enableDirections) {
+      if (this.autocomplete) {
+        this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
+        this.autocomplete.unbind();
+        this.autocomplete = null;
+      }
+      return;
     }
+    if (!this.autocomplete) {
+      var input = this.$.pac;
+      this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+      this.autocomplete = new google.maps.places.Autocomplete(input);
+      this.autocomplete.bindTo('bounds', this.map);
+      google.maps.event.addListener(this.autocomplete, 'place_changed', this.updateResults.bind(this));
+    }
+
+    var place = this.autocomplete.getPlace();
+    if (!place || !place.geometry) {
+      return;
+    }
+
+    this.origin = place.geometry.location;
+  }
     
   });
 
