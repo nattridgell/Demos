@@ -13,9 +13,9 @@ Using placeId and the auto generated info window.
 </google-map-highlighter>
 ```
 
-Using an address and overwriting the title.
+Using an address and overwriting the name.
 ```
-<google-map-highlighter address="48 Pirrama Road, Pyrmont, NSW" title="Google, Sydney">
+<google-map-highlighter address="48 Pirrama Road, Pyrmont, NSW" name="Google, Sydney">
 </google-map-highlighter>
 ```
 ##Attributes##
@@ -42,4 +42,8 @@ Using an address and overwriting the title.
 **enableDirections**
   Whether or not to show a search box at the top of the map so that people can get directions to the location being highlighted.
   *default: false*
+  
+**details**
+  Whether or not to generate information for the infowindow from the place_id.
+  *default: true*
 
