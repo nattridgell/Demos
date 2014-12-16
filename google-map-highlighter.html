@@ -74,54 +74,17 @@
       left: 0;
       visibility:hidden;
     }
-<!-- TODO: @Natalie make the formatting of the pac fit the map better -->
-      .controls {
-        margin-top: 16px;
-        border: 1px solid transparent;
-        border-radius: 2px 0 0 2px;
-        box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        height: 1.5em;
-        outline: none;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-      }
-
-      #pac {
-        background-color: #fff;
-        padding: 0 11px 0 13px;
-        font-family: Roboto;
-        font-size: 1em;
-        font-weight: 300;
-        text-overflow: ellipsis;
-      }
-
-      #pac:focus {
-        border-color: #4d90fe;
-        margin-left: -1px;
-        padding-left: 14px;  /* Regular padding-left + 1. */
-        width: 401px;
-      }
-
-      .pac-container {
-        font-family: Roboto;
-      }
-
   </style>
 
 
 <google-maps-api apiKey="{{apiKey}}" version="3.exp" libraries="places"></google-maps-api>
-
-<template bind if="{{enableDirections}}">
       <google-map-directions map="{{map}}"
           startAddress="{{origin}}"
           endAddress="{{address}}"
           travelMode="DRIVING"></google-map-directions>
-</template>
 <div id="map">
-<template bind if="{{enableDirections}}">
-   <input id="pac" class="controls" type="text"
+   <input id="searchbox" class="controls" type="text"
         placeholder="Enter a start address">
-</template>
   <google-map-highlighter-map map="{{map}}" zoom="{{zoom}}" placeId="{{placeId}}"  address="{{address}}"  on-google-map-ready="{{mapReady}}"  >
      <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" name="{{name}}">
 </google-map-marker> </google-map-highlighter-map>
@@ -238,7 +201,7 @@
      *
      */
     observe: {
-      enableDirections: 'updateResultsMarker'
+      enableDirections: 'updateResults'
     },
 
 
@@ -251,8 +214,8 @@
       this.phone = place.detail.formatted_phone_number;
       this.rating = place.detail.rating;
       this.$.map.style.visibility = 'visible';
-      this.contentChanged();
       this.updateResults();
+      this.contentChanged();
     },
 
     contentChanged: function(){
@@ -265,17 +228,24 @@
     },
 
     updateResults: function () {
-      if (!this.enableDirections) {
+      if (!this.enableDirections || !this.map) {
         if (this.autocomplete) {
-          this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop(); //TODO: @Natalie properly remove searchbox from the map.
           this.autocomplete.unbind();
           this.autocomplete = null;
+        }
+        if (this.map) {
+          var searchbox = this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
+          if (searchbox.id == 'searchbox') {
+            searchbox.style.visibility = 'hidden';
+          } else {
+            this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchbox.id);
+          }
         }
         this.origin = null;
         return;
       }
       if (!this.autocomplete) {
-        var input = this.$.pac;
+        var input = this.$.searchbox;
         this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
         this.autocomplete = new google.maps.places.Autocomplete(input);
         this.autocomplete.bindTo('bounds', this.map);
