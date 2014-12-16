@@ -179,7 +179,7 @@
 
     /**
      * If there should be a search box displayed for users to get directions to the place highlighted.
-     * TODO: @Natalie properly remove/include the searchbox when enableDirections changes value.
+     * 
      *
      * @attribute enableDirections
      * @type boolean
@@ -197,7 +197,7 @@
     origin: null,
 
     /**
-     * TODO: @Natalie properly remove/include the searchbox when enableDirections changes value.
+     * 
      *
      */
     observe: {
@@ -208,7 +208,9 @@
     mapReady:  function(place) {
       this.latitude = place.detail.geometry.location.lat();
       this.longitude = place.detail.geometry.location.lng();
-      this.name = place.detail.name;
+      if (!this.name){
+        this.name = place.detail.name;
+      }
       this.address = place.detail.formatted_address;
       this.website = place.detail.website;
       this.phone = place.detail.formatted_phone_number;
@@ -254,10 +256,15 @@
 
       var place = this.autocomplete.getPlace();
       if (!place || !place.geometry) {
+        this.origin = null;
+        this.$.marker.hidden = false;    
+        this.$.marker.info.open(this.map, this.$.marker.marker);
         return;
       }
 
       this.origin = place.geometry.location;
+      this.$.marker.hidden = true; 
+      this.$.marker.info.close(this.map, this.$.marker.marker);
     }
     
   });
