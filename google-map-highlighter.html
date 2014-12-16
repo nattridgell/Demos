@@ -23,7 +23,7 @@
 </script>
 </polymer-element>
 -->
-<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries signedIn language placeId ">
+<polymer-element name="google-map-highlighter-map" extends="google-map" attributes="address apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries signedIn language placeId ">
 <template>
   <shadow></shadow>
  <!-- Only include the following line if standard google-map-marker 's are no longer being used
@@ -32,24 +32,34 @@
 <script>
     Polymer({
       placeId: null,
+      address:null,
 
       updateLocation: function() {
-window.console.log("I am inside update location");
+        if (this.placeId) {
           var service = new google.maps.places.PlacesService(this.map);
           service.getDetails({placeId: this.placeId}, function(place, status) {
-window.console.log("I am inside update location - get Details");
             if (status == google.maps.places.PlacesServiceStatus.OK) {
               this.latitude = place.geometry.location.lat();
               this.longitude = place.geometry.location.lng();
-              this.name = place.name; // TODO: Check the syntax for icon declaration
-window.console.log("I am inside update location - get Details with lat: " + this.latitude);
+              if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+              }
               this.asyncFire('google-map-ready', place);
             }
           }.bind(this));
+        } else if (this.address) {
+          var geocoder = new google.maps.Geocoder();
+          geocoder.geocode( {address: this.address}, function(place, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+              this.latitude = place[0].geometry.location.lat();
+              this.longitude = place[0].geometry.location.lng();
+              this.asyncFire('google-map-ready', place[0]);
+            }
+          }.bind(this));
+        }
       },
 
       mapApiLoaded: function() {
-window.console.log("I am inside mapApiLoaded");
         this.map = new google.maps.Map(this.$.map, this.getMapOptions());
         this.updateLocation();
         this.updateCenter();
@@ -65,7 +75,7 @@ window.console.log("I am inside mapApiLoaded");
 
 
 
-<polymer-element name="google-map-highlighter" attributes="apiKey map name placeId details">
+<polymer-element name="google-map-highlighter" attributes="address apiKey map name placeId details">
 <template>
 
   <style>
@@ -88,7 +98,7 @@ window.console.log("I am inside mapApiLoaded");
 
  <!-- <google-maps-api apiKey="{{apiKey}}" version='3.exp' on-api-load="{{updateLocation}}" libraries="places"></google-maps-api> -->
 <div id="map">
-  <google-map-highlighter-map map="{{map}}" zoom="14" placeId="{{placeId}}"  on-google-map-ready="{{mapReady}}">
+  <google-map-highlighter-map address="{{address}}" map="{{map}}" zoom="14" placeId="{{placeId}}"  on-google-map-ready="{{mapReady}}">
      <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" name="{{name}}"></google-map-marker> </google-map-highlighter-map>
 </div>
 
@@ -136,6 +146,7 @@ Polymer({
     map: null,
     marker:null,
 
+
     mapReady:  function(place) {
       this.latitude = place.detail.geometry.location.lat();
       this.longitude = place.detail.geometry.location.lng();
@@ -143,6 +154,7 @@ Polymer({
       this.address = place.detail.formatted_address;
       this.website = place.detail.website;
       this.phone = place.detail.formatted_phone_number;
+      this.rating = place.detail.rating;
       this.$.map.style.visibility = 'visible';
       this.contentChanged();
     },
@@ -150,9 +162,8 @@ Polymer({
 
     contentChanged: function(){
       var marker = this.$.marker;
-	window.console.log(this.details);
-      if (this.details) {
-	marker.innerHTML = '<h1>'+this.name+'</h1><p>Address: '+this.address+'<br>Website: <a href="'+this.website+'">google.com.au</a><br>Phone: '+this.phone+'</p>';
+      if (this.details && this.placeId!=undefined) {
+	marker.innerHTML = '<h1>'+this.name+'</h1><p>Address: '+this.address+'<br>Website: <a href="'+this.website+'">google.com.au</a><br>Phone: '+this.phone+'<br>Rating: '+this.rating+'</p>';
       }
 	marker.innerHTML = marker.innerHTML+this.innerHTML;
     }
