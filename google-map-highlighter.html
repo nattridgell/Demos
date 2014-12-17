@@ -262,6 +262,7 @@
       var place = this.autocomplete.getPlace();
       if (!place || !place.geometry) {
         this.origin = null;
+        this.$.directions.map = null;
         this.$.marker.hidden = false;    
         this.$.marker.info.open(this.map, this.$.marker.marker);
         return;
