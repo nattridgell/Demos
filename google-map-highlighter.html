@@ -78,13 +78,13 @@
 
 
 <google-maps-api apiKey="{{apiKey}}" version="3.exp" libraries="places"></google-maps-api>
-      <google-map-directions map="{{map}}"
+      <google-map-directions id="directions"
           startAddress="{{origin}}"
           endAddress="{{address}}"
           travelMode="DRIVING"></google-map-directions>
 <div id="map">
    <input id="searchbox" class="controls" type="text"
-        placeholder="Enter a start address">
+        placeholder="Enter a start address"> 
   <google-map-highlighter-map map="{{map}}" zoom="{{zoom}}" placeId="{{placeId}}"  address="{{address}}"  on-google-map-ready="{{mapReady}}"  >
      <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" name="{{name}}">
 </google-map-marker> </google-map-highlighter-map>
@@ -216,6 +216,7 @@
       this.phone = place.detail.formatted_phone_number;
       this.rating = place.detail.rating;
       this.$.map.style.visibility = 'visible';
+      this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(this.$.searchbox);
       this.updateResults();
       this.contentChanged();
     },
@@ -231,16 +232,17 @@
 
     updateResults: function () {
       if (!this.enableDirections || !this.map) {
+        this.$.directions.map = null; // remove the directions from the map
         if (this.autocomplete) {
           this.autocomplete.unbind();
           this.autocomplete = null;
         }
-        if (this.map) {
+        if (this.map && this.map.controls[google.maps.ControlPosition.TOP_LEFT]) {
           var searchbox = this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
           if (searchbox.id == 'searchbox') {
             searchbox.style.visibility = 'hidden';
           } else {
-            this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchbox.id);
+            this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchbox);
           }
         }
         this.origin = null;
@@ -248,10 +250,13 @@
       }
       if (!this.autocomplete) {
         var input = this.$.searchbox;
-        this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+        this.addSearchBox();
         this.autocomplete = new google.maps.places.Autocomplete(input);
         this.autocomplete.bindTo('bounds', this.map);
         google.maps.event.addListener(this.autocomplete, 'place_changed', this.updateResults.bind(this));
+      }
+      if (!this.$.directions.map ) {
+        this.$.directions.map = this.map;
       }
 
       var place = this.autocomplete.getPlace();
@@ -265,7 +270,20 @@
       this.origin = place.geometry.location;
       this.$.marker.hidden = true; 
       this.$.marker.info.close(this.map, this.$.marker.marker);
-    }
+    },
+
+    addSearchBox: function() {
+      if (this.map) {
+        if (this.map.controls[google.maps.ControlPosition.TOP_LEFT].length ) {//check if it has already been added
+          var searchbox = this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
+          if (searchbox.id != 'searchbox') {
+            this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchbox);
+          }
+        }
+        this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(this.$.searchbox);
+      }
+    },
+
     
   });
 
