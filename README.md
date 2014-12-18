@@ -15,7 +15,19 @@ Using placeId and the auto generated info window.
 
 Using an address and overwriting the name.
 ```
-<google-map-highlighter address="48 Pirrama Road, Pyrmont, NSW" name="Google, Sydney">
+<google-map-highlighter address="48 Pirrama Road, Pyrmont, NSW" name="Google, Sydney" details="false">
+</google-map-highlighter>
+```
+
+Allowing directions.
+```
+<google-map-highlighter placeId="ChIJN1t_tDeuEmsRUsoyG83frY4" name="Google, Sydney" enableDirections="true">
+</google-map-highlighter>
+```
+
+With apiKey.
+```
+<google-map-highlighter apiKey="abc123" placeId="ChIJN1t_tDeuEmsRUsoyG83frY4" name="Google, Sydney">
 </google-map-highlighter>
 ```
 ##Attributes##
