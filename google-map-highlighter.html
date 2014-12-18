@@ -3,6 +3,7 @@
 <link rel="import" href="bower_components/google-map/google-map.html">
 <link rel="import" href="bower_components/google-map/google-map-directions.html">
 
+
 <polymer-element name="google-map-highlighter-map" extends="google-map" attributes="address apiKey latitude longitude zoom showCenterMarker version map mapType disableDefaultUI fitToMarkers zoomable styles maxZoom minZoom libraries signedIn placeId ">
 
 <template>
@@ -81,7 +82,7 @@
       <google-map-directions id="directions"
           startAddress="{{origin}}"
           endAddress="{{address}}"
-          travelMode="DRIVING"></google-map-directions>
+          travelMode="DRIVING" on-google-map-response="{{directionsReady}}"></google-map-directions>
 <div id="map">
    <input id="searchbox" class="controls" type="text"
         placeholder="Enter a start address"> 
@@ -89,8 +90,6 @@
      <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" name="{{name}}">
 </google-map-marker> </google-map-highlighter-map>
 </div>
-
-
 
 </template>
 <script>
@@ -188,7 +187,7 @@
     enableDirections: false,
 
     /**
-     * If directions are enabled, this is the LatLng of the start address.
+     * If directions are enabled, this is the LatLng of the start address, or the direct address if the autocomplete option was not selected.
      *
      * @attribute origin
      * @type boolean
@@ -197,7 +196,7 @@
     origin: null,
 
     /**
-     * 
+     * Monitoring enable directions for changes to its value and calling updateResults respectively.
      *
      */
     observe: {
@@ -215,10 +214,10 @@
       this.website = place.detail.website;
       this.phone = place.detail.formatted_phone_number;
       this.rating = place.detail.rating;
-      this.$.map.style.visibility = 'visible';
       this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(this.$.searchbox);
-      this.updateResults();
       this.contentChanged();
+      this.updateResults();
+      this.$.map.style.visibility = 'visible';
     },
 
     contentChanged: function(){
@@ -227,50 +226,46 @@
 	marker.innerHTML = '<h1>'+this.name+'</h1><p>Address: '+this.address+'<br>Website: <a href="'+this.website+'">google.com.au</a><br>Phone: '+this.phone+'<br>Rating: '+this.rating+'</p>';
       }
       marker.innerHTML = marker.innerHTML+this.innerHTML;
-      marker.info.open(this.map, marker.marker);
     },
 
     updateResults: function () {
-      if (!this.enableDirections || !this.map) {
-        this.$.directions.map = null; // remove the directions from the map
-        if (this.autocomplete) {
-          this.autocomplete.unbind();
-          this.autocomplete = null;
-        }
-        if (this.map && this.map.controls[google.maps.ControlPosition.TOP_LEFT]) {
+      if (!this.map) {
+        return;
+      }
+      if ( !this.enableDirections ) {
+        if (this.map.controls[google.maps.ControlPosition.TOP_LEFT]) {
           var searchbox = this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
-          if (searchbox.id == 'searchbox') {
-            searchbox.style.visibility = 'hidden';
-          } else {
+          if (searchbox.id != 'searchbox') {
             this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchbox);
+            return;
           }
+          this.openMarker();
         }
-        this.origin = null;
         return;
       }
       if (!this.autocomplete) {
         var input = this.$.searchbox;
-        this.addSearchBox();
         this.autocomplete = new google.maps.places.Autocomplete(input);
         this.autocomplete.bindTo('bounds', this.map);
         google.maps.event.addListener(this.autocomplete, 'place_changed', this.updateResults.bind(this));
       }
+
       if (!this.$.directions.map ) {
-        this.$.directions.map = this.map;
+        this.addSearchBox();
       }
 
       var place = this.autocomplete.getPlace();
       if (!place || !place.geometry) {
-        this.origin = null;
-        this.$.directions.map = null;
-        this.$.marker.hidden = false;    
-        this.$.marker.info.open(this.map, this.$.marker.marker);
+        if (this.$.searchbox.value) {
+          this.origin = this.$.searchbox.value;
+          return;
+        }
+        this.openMarker();
         return;
       }
 
       this.origin = place.geometry.location;
-      this.$.marker.hidden = true; 
-      this.$.marker.info.close(this.map, this.$.marker.marker);
+
     },
 
     addSearchBox: function() {
@@ -285,6 +280,24 @@
       }
     },
 
+    openMarker: function() {
+      this.origin = null;
+      this.$.directions.map = null;
+    /* If auto centering is desired, uncomment this line.  
+     * Note: Introduces undesirable bug: 
+     * If the marker being centered does not allow the infowindow to be fully displayed.
+     * Then the map will wobble/jump once when centering.
+     *  this.map.panTo(new google.maps.LatLng(this.latitude, this.longitude)); */
+      this.$.marker.hidden = false;    
+      this.$.marker.info.open(this.map, this.$.marker.marker);
+    },
+
+    // TODO: give details about the route/direction eg. time, distance etc.
+    directionsReady: function(response) {
+      this.$.marker.hidden = true; 
+      this.$.marker.info.close(this.map, this.$.marker.marker);
+      this.$.directions.map = this.map;
+    }
     
   });
 
