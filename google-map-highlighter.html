@@ -283,11 +283,7 @@
     openMarker: function() {
       this.origin = null;
       this.$.directions.map = null;
-    /* If auto centering is desired, uncomment this line.  
-     * Note: Introduces undesirable bug: 
-     * If the marker being centered does not allow the infowindow to be fully displayed.
-     * Then the map will wobble/jump once when centering.
-     *  this.map.panTo(new google.maps.LatLng(this.latitude, this.longitude)); */
+      this.map.panTo(new google.maps.LatLng(this.latitude, this.longitude)); 
       this.$.marker.hidden = false;    
       this.$.marker.info.open(this.map, this.$.marker.marker);
     },
