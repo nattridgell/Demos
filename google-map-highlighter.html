@@ -67,7 +67,7 @@
       height: 100%;
     }
 
-    #map {
+    #map, #searchbox, #selectMode {
       position: absolute;
       top: 0;
       right: 0;
@@ -82,10 +82,19 @@
       <google-map-directions id="directions"
           startAddress="{{origin}}"
           endAddress="{{address}}"
-          travelMode="DRIVING" on-google-map-response="{{directionsReady}}"></google-map-directions>
+          travelMode="{{travelMode}}" on-google-map-response="{{directionsReady}}"></google-map-directions>
+
 <div id="map">
+
+</div>
    <input id="searchbox" class="controls" type="text"
         placeholder="Enter a start address"> 
+  <select id="selectMode" value="{{travelMode}}">
+    <option value="DRIVING" selected>Driving</option> 
+    <option value="TRANSIT" >Transit</option>
+    <option value="WALKING">Walking</option>
+    <option value="BICYCLING">Cycling</option>
+  </select>
   <google-map-highlighter-map map="{{map}}" zoom="{{zoom}}" placeId="{{placeId}}"  address="{{address}}"  on-google-map-ready="{{mapReady}}"  >
      <google-map-marker id="marker" latitude="{{latitude}}" longitude="{{longitude}}" name="{{name}}">
 </google-map-marker> </google-map-highlighter-map>
@@ -94,6 +103,8 @@
 </template>
 <script>
   Polymer({
+    // Please uncomment when the travel duration and distance are to be used.
+    // directionsInfo:null,
 
     /**
      * Name of the place being highlighted.
@@ -189,11 +200,15 @@
     /**
      * If directions are enabled, this is the LatLng of the start address, or the direct address if the autocomplete option was not selected.
      *
-     * @attribute origin
      * @type boolean
      * @default false
      */
     origin: null,
+
+    /**TravelMode for directions as selected by the user.
+     * Default selection is driving.
+     */
+    travelMode: 'DRIVING',
 
     /**
      * Monitoring enable directions for changes to its value and calling updateResults respectively.
@@ -205,6 +220,9 @@
 
 
     mapReady:  function(place) {
+      this.$.searchbox.style.visibility = 'visible';
+      this.$.selectMode.style.visibility = 'visible';
+      this.addSearchBox();
       this.latitude = place.detail.geometry.location.lat();
       this.longitude = place.detail.geometry.location.lng();
       if (!this.name){
@@ -214,7 +232,7 @@
       this.website = place.detail.website;
       this.phone = place.detail.formatted_phone_number;
       this.rating = place.detail.rating;
-      this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(this.$.searchbox);
+
       this.contentChanged();
       this.updateResults();
       this.$.map.style.visibility = 'visible';
@@ -233,12 +251,10 @@
         return;
       }
       if ( !this.enableDirections ) {
-        if (this.map.controls[google.maps.ControlPosition.TOP_LEFT]) {
-          var searchbox = this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
-          if (searchbox.id != 'searchbox') {
-            this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchbox);
-            return;
-          }
+        var mapControls = this.map.controls[google.maps.ControlPosition.TOP_LEFT];
+        if (mapControls && mapControls.length > 1) {
+          this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
+          this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
           this.openMarker();
         }
         return;
@@ -270,13 +286,10 @@
 
     addSearchBox: function() {
       if (this.map) {
-        if (this.map.controls[google.maps.ControlPosition.TOP_LEFT].length ) {//check if it has already been added
-          var searchbox = this.map.controls[google.maps.ControlPosition.TOP_LEFT].pop();
-          if (searchbox.id != 'searchbox') {
-            this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchbox);
-          }
+        if (this.map.controls[google.maps.ControlPosition.TOP_LEFT].length  < 2) {//check if it has already been added
+          this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(this.$.searchbox);
+          this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(this.$.selectMode);
         }
-        this.map.controls[google.maps.ControlPosition.TOP_LEFT].push(this.$.searchbox);
       }
     },
 
@@ -293,6 +306,9 @@
       this.$.marker.hidden = true; 
       this.$.marker.info.close(this.map, this.$.marker.marker);
       this.$.directions.map = this.map;
+      var leg = response.detail.response.routes[0].legs[0];
+      // Nothing is yet being done with this travel information
+      // this.directionsInfo = [leg.duration.text, leg.distance.text].join(', '); 
     }
     
   });
