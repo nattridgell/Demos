@@ -1,0 +1,39 @@
+<!doctype html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <script src="../bower_components/platform/platform.js"></script>
+  <script src="../bower_components/web-component-tester/browser.js"></script>
+  <link rel="import" href="../google-map-highlighter.html">
+</head>
+<body>
+
+  <google-map-highlighter id="highlighter" placeId="ChIJN1t_tDeuEmsRUsoyG83frY4"></google-map>
+
+<script>
+var map = document.querySelector('#placeIdOnly');
+
+suite('google-map-highlighter', function() {
+
+  test('alwaysPasses', function() {
+    assert.isTrue(true);
+  });
+
+  test('defaults', function() {
+    assert.equal(highlighter.placeId, "ChIJN1t_tDeuEmsRUsoyG83frY4");
+    assert.isFalse(highlighter.enableDirections);
+    assert.isFalse(highlighter.disableDefaultUI);
+    assert.equal(highlighter.zoom, 14);
+    assert.isNull(highlighter.origin);
+    assert.isTrue(highlighter.details);
+  });
+
+
+
+});
+
+</script>
+</body>
+</html>
